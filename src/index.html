@@ -1,32 +1,686 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="stylesheet" href="styles.css" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus App</title>
-        <script type="module" src="/main.js" defer></script>
-    </head>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务器延迟检测</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'bg-dark': '#121212',
+                        'card-dark': '#1e1e1e',
+                        'accent-orange': '#ff8c42',
+                        'success-green': '#2a9d8f',
+                        'error-red': '#e76f51',
+                        'offline-gray': '#6c757d'
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'bounce-gentle': 'bounceGentle 0.8s ease-in-out',
+                        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'scale-hover': 'scaleHover 0.2s ease-in-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(30px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        bounceGentle: {
+                            '0%, 20%, 50%, 80%, 100%': { transform: 'translateY(0)' },
+                            '40%': { transform: 'translateY(-5px)' },
+                            '60%': { transform: 'translateY(-3px)' }
+                        },
+                        scaleHover: {
+                            '0%': { transform: 'scale(1)' },
+                            '100%': { transform: 'scale(1.02)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="m-0 p-0 font-sans bg-bg-dark text-gray-200 min-h-screen flex justify-center items-center">
+    <div class="max-w-2xl w-full mx-4">
+        <!-- 许可协议页面 -->
+        <div class="bg-card-dark rounded-2xl p-8 shadow-2xl border border-accent-orange/20 animate-fade-in" id="license-card">
+            <h1 class="text-3xl font-semibold text-accent-orange mb-6 text-center animate-bounce-gentle">
+                软件使用许可协议
+            </h1>
+            
+            <div class="max-h-80 overflow-y-auto p-4 bg-black/20 rounded-lg mb-6 text-left border border-accent-orange/20 animate-slide-up">
+                <h3 class="text-accent-orange text-lg font-medium mt-0 border-b border-accent-orange/30 pb-2 mb-4">
+                    📌 您可以自由：
+                </h3>
+                <ul class="pl-6 space-y-2">
+                    <li class="text-success-green transition-colors duration-300 hover:text-green-400">
+                        ✅ 使用、复制、修改本软件（包括反编译、二次开发）
+                    </li>
+                    <li class="text-success-green transition-colors duration-300 hover:text-green-400">
+                        ✅ 非商业性地分享本软件（禁止收费或捆绑商业服务）
+                    </li>
+                </ul>
+                
+                <h3 class="text-accent-orange text-lg font-medium mt-6 border-b border-accent-orange/30 pb-2 mb-4">
+                    🚫 您必须遵守以下限制：
+                </h3>
+                <ol class="pl-6 space-y-3">
+                    <li class="text-error-red">
+                        <strong>禁止商用</strong><br>
+                        <span class="text-sm">✗ 不得用于任何盈利、商业或企业用途（需授权请单独联系）</span>
+                    </li>
+                    <li class="text-error-red">
+                        <strong>禁止违法及滥用行为</strong><br>
+                        <span class="text-sm">
+                            ✗ <strong>禁止监听、监控他人数据</strong>（如窃取隐私、非法抓取通信内容）<br>
+                            ✗ <strong>禁止恶意爬虫</strong>（如大规模爬取受保护数据、干扰网站运行）<br>
+                            ✗ <strong>禁止损害他人设备或网络安全</strong>（如传播病毒、DDoS攻击）
+                        </span>
+                    </li>
+                    <li class="text-error-red">
+                        <strong>禁止传播违规内容</strong><br>
+                        <span class="text-sm">
+                            ✗ 涉政、涉黄、暴力、恐怖等违法信息<br>
+                            ✗ 侵犯隐私、诽谤他人等不良内容<br>
+                            ✗ <strong>禁止上传或传播与软件功能无关的内容</strong>
+                        </span>
+                    </li>
+                </ol>
+                
+                <h3 class="text-accent-orange text-lg font-medium mt-6 border-b border-accent-orange/30 pb-2 mb-4">
+                    ⚠️ 免责声明
+                </h3>
+                <ul class="pl-6 space-y-2">
+                    <li class="text-gray-300">本软件按 <strong>"原样"</strong> 提供，开发者 <strong>不承担任何责任</strong></li>
+                    <li class="text-gray-300">用户需自行承担使用风险，违规行为与开发者无关</li>
+                </ul>
+                
+                <h3 class="text-accent-orange text-lg font-medium mt-6 border-b border-accent-orange/30 pb-2 mb-4">
+                    ⚖️ 违规后果
+                </h3>
+                <ul class="pl-6 space-y-2">
+                    <li class="text-error-red">立即终止使用权</li>
+                    <li class="text-error-red">保留法律追责权利</li>
+                </ul>
+                
+                <h3 class="text-accent-orange text-lg font-medium mt-6 border-b border-accent-orange/30 pb-2 mb-4">
+                    🍪 Cookie使用说明
+                </h3>
+                <div class="pl-6 space-y-2 text-sm text-gray-300">
+                    <p>为了提供更好的服务体验，本应用将在您同意后设置以下Cookie：</p>
+                    <ul class="list-disc pl-4 space-y-1">
+                        <li><strong>许可同意状态</strong> - 记录您已同意本协议，避免重复显示</li>
+                        <li><strong>用户设置</strong> - 保存您的个性化设置和偏好</li>
+                        <li><strong>会话信息</strong> - 维护您的登录状态和操作记录</li>
+                        <li><strong>功能性Cookie</strong> - 确保应用正常运行所需的技术数据</li>
+                    </ul>
+                    <p class="text-xs text-gray-400 mt-2">
+                        这些Cookie仅用于改善用户体验，不会收集个人敏感信息。您可以随时通过浏览器设置清除这些Cookie。
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-center mb-6 animate-slide-up" style="animation-delay: 0.2s;">
+                <input type="checkbox" id="agree-checkbox" class="w-5 h-5 mr-2 accent-accent-orange transition-transform duration-200 hover:scale-110">
+                <label for="agree-checkbox" class="text-gray-300 cursor-pointer hover:text-white transition-colors duration-300">
+                    我已阅读并同意上述许可协议及Cookie使用政策
+                </label>
+            </div>
+            
+            <button id="agree-btn" class="w-full bg-accent-orange text-white border-0 py-3 px-6 rounded-full text-lg font-medium cursor-pointer transition-all duration-300 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 enabled:hover:bg-orange-500 enabled:hover:scale-105 enabled:hover:shadow-lg enabled:hover:shadow-accent-orange/30 animate-slide-up" style="animation-delay: 0.4s;" disabled>
+                同意并继续
+            </button>
+        </div>
+        
+        <!-- 检测页面 -->
+        <div class="bg-card-dark rounded-2xl p-8 shadow-2xl border border-accent-orange/20 hidden animate-fade-in" id="detection-card">
+            <h1 class="text-3xl font-semibold text-accent-orange mb-6 text-center animate-bounce-gentle">
+                服务器延迟检测
+            </h1>
+            
+            <!-- Cookie状态显示 -->
+            <div class="bg-success-green/10 rounded-lg p-4 mb-6 border border-success-green/20 animate-fade-in">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" class="text-success-green mr-2">
+                        <path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1h-11zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2h-7zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48V8.35zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.35z"/>
+                    </svg>
+                    <span class="text-success-green font-medium">Cookie已成功设置</span>
+                </div>
+                <div class="text-sm text-gray-300 mt-2" id="cookie-info">
+                    已设置 <span id="cookie-count">0</span> 个Cookie，点击查看详情
+                </div>
+                <button id="show-cookies-btn" class="mt-2 text-accent-orange hover:text-orange-400 transition-colors text-sm underline">
+                    查看当前Cookie
+                </button>
+            </div>
+            
+            <!-- Cookie详情模态框 -->
+            <div id="cookie-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+                <div class="bg-card-dark rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto border border-accent-orange/20">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-accent-orange">当前Cookie信息</h3>
+                        <button id="close-modal-btn" class="text-gray-400 hover:text-white text-2xl">×</button>
+                    </div>
+                    <div id="cookie-list" class="space-y-3">
+                        <!-- Cookie列表将在这里显示 -->
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-accent-orange/20">
+                        <button id="clear-cookies-btn" class="bg-error-red text-white px-4 py-2 rounded font-medium hover:bg-red-600 transition-colors">
+                            清除所有Cookie
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <p id="status-message" class="text-center mb-6 text-gray-300 animate-pulse-slow">
+                正在测试服务器连接质量，请稍候...
+            </p>
+            
+            <div class="flex flex-col gap-4 mb-6">
+                <div class="server-item flex justify-between items-center p-4 bg-accent-orange/10 rounded-lg border border-accent-orange/20 transition-all duration-300 hover:border-success-green hover:bg-success-green/10 hover:scale-102 cursor-pointer animate-slide-up" id="cn-server" data-server="cn">
+                    <div class="text-left">
+                        <div class="font-medium mb-1">中国服务器</div>
+                        <div class="text-sm text-gray-400" id="cn-ip">cn.tangbot.xyz:3000</div>
+                    </div>
+                    <div class="font-semibold min-w-16 text-center" id="cn-ping">
+                        <span class="inline-block w-4 h-4 border-2 border-accent-orange/30 border-t-accent-orange rounded-full animate-spin"></span>
+                    </div>
+                </div>
+                
+                <div class="server-item flex justify-between items-center p-4 bg-accent-orange/10 rounded-lg border border-accent-orange/20 transition-all duration-300 hover:border-success-green hover:bg-success-green/10 hover:scale-102 cursor-pointer animate-slide-up" id="us-server" data-server="us" style="animation-delay: 0.1s;">
+                    <div class="text-left">
+                        <div class="font-medium mb-1">美国服务器</div>
+                        <div class="text-sm text-gray-400" id="us-ip">us.tangbot.xyz:3000</div>
+                    </div>
+                    <div class="font-semibold min-w-16 text-center" id="us-ping">
+                        <span class="inline-block w-4 h-4 border-2 border-accent-orange/30 border-t-accent-orange rounded-full animate-spin"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="offline-message" class="text-error-red text-center mt-4 font-medium hidden animate-fade-in">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="inline mr-2">
+                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+                网络连接不可用，请检查您的网络设置
+            </div>
+            
+            <button id="connect-btn" class="w-full bg-accent-orange text-white border-0 py-3 px-6 rounded-full text-lg font-medium cursor-pointer transition-all duration-300 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500 enabled:hover:bg-orange-500 enabled:hover:scale-105 enabled:hover:shadow-lg enabled:hover:shadow-accent-orange/30 animate-slide-up mb-4" style="animation-delay: 0.3s;" disabled>
+                连接最佳服务器
+            </button>
+            <button id="retry-btn" class="w-full bg-gray-600 text-white border-0 py-3 px-6 rounded-full text-lg font-medium cursor-pointer transition-all duration-300 hover:bg-gray-500 hover:scale-105 hidden animate-fade-in">
+                重试检测
+            </button>
+            <div id="status-text" class="text-sm text-gray-400 text-center mt-4 animate-pulse">
+                正在检测最优服务器...
+            </div>
+        </div>
+    </div>
 
-    <body>
-        <main class="container">
-            <h1>Welcome to PakePlus</h1>
-            <form class="row" id="greet-form">
-                <input id="inputValue" placeholder="Enter a something..." />
-            </form>
-            <div class="resultBox">
-                <span>result: </span>
-                <span id="result"></span>
-            </div>
-            <div class="invokeBox">
-                <button id="openUrl">open_url_browser</button>
-                <button id="openUrlNew">open_url_new</button>
-                <button id="runCommand">run_command</button>
-                <button id="downloadFile">download_file</button>
-                <button id="getExeDir">get_exe_dir</button>
-                <button id="getEnvVar">get_env_var</button>
-                <button id="findPort">find_port</button>
-            </div>
-        </main>
-    </body>
+    <script>
+        // Cookie管理功能
+        class CookieManager {
+            // 设置Cookie
+            static setCookie(name, value, days = 365, options = {}) {
+                const defaults = {
+                    path: '/',
+                    secure: location.protocol === 'https:',
+                    sameSite: 'Lax'
+                };
+                
+                const settings = { ...defaults, ...options };
+                
+                let cookieString = `${name}=${encodeURIComponent(value)}`;
+                
+                if (days) {
+                    const date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    cookieString += `; expires=${date.toUTCString()}`;
+                }
+                
+                if (settings.path) cookieString += `; path=${settings.path}`;
+                if (settings.domain) cookieString += `; domain=${settings.domain}`;
+                if (settings.secure) cookieString += `; secure`;
+                if (settings.sameSite) cookieString += `; SameSite=${settings.sameSite}`;
+                if (settings.httpOnly) cookieString += `; HttpOnly`;
+                
+                document.cookie = cookieString;
+                
+                console.log(`Cookie设置成功: ${name}=${value}`);
+                return true;
+            }
+            
+            // 获取Cookie
+            static getCookie(name) {
+                const nameEQ = name + "=";
+                const ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                    if (c.indexOf(nameEQ) === 0) {
+                        return decodeURIComponent(c.substring(nameEQ.length, c.length));
+                    }
+                }
+                return null;
+            }
+            
+            // 删除Cookie
+            static deleteCookie(name) {
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                console.log(`Cookie删除成功: ${name}`);
+            }
+            
+            // 获取所有Cookie
+            static getAllCookies() {
+                const cookies = {};
+                if (document.cookie) {
+                    document.cookie.split(';').forEach(cookie => {
+                        const [name, value] = cookie.trim().split('=');
+                        if (name && value) {
+                            cookies[name] = decodeURIComponent(value);
+                        }
+                    });
+                }
+                return cookies;
+            }
+            
+            // 清除所有Cookie
+            static clearAllCookies() {
+                const cookies = this.getAllCookies();
+                Object.keys(cookies).forEach(name => {
+                    this.deleteCookie(name);
+                });
+                console.log('所有Cookie已清除');
+            }
+            
+            // 设置应用相关的Cookie
+            static setAppCookies() {
+                const timestamp = new Date().toISOString();
+                const sessionId = 'sess_' + Math.random().toString(36).substr(2, 9);
+                const userId = 'user_' + Math.random().toString(36).substr(2, 8);
+                
+                // 设置各种类型的Cookie
+                const cookies = [
+                    { name: 'license_agreed', value: 'true', days: 365, description: '许可协议同意状态' },
+                    { name: 'consent_timestamp', value: timestamp, days: 365, description: '同意时间戳' },
+                    { name: 'session_id', value: sessionId, days: 1, description: '会话ID' },
+                    { name: 'user_id', value: userId, days: 365, description: '用户标识' },
+                    { name: 'app_version', value: '1.0.0', days: 30, description: '应用版本' },
+                    { name: 'theme_preference', value: 'dark', days: 90, description: '主题偏好' },
+                    { name: 'language', value: 'zh-CN', days: 365, description: '语言设置' },
+                    { name: 'analytics_enabled', value: 'true', days: 365, description: '分析统计开关' }
+                ];
+                
+                cookies.forEach(cookie => {
+                    this.setCookie(cookie.name, cookie.value, cookie.days);
+                });
+                
+                return cookies;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const licenseCard = document.getElementById('license-card');
+            const detectionCard = document.getElementById('detection-card');
+            const agreeCheckbox = document.getElementById('agree-checkbox');
+            const agreeBtn = document.getElementById('agree-btn');
+            const cookieInfo = document.getElementById('cookie-info');
+            const cookieCount = document.getElementById('cookie-count');
+            const showCookiesBtn = document.getElementById('show-cookies-btn');
+            const cookieModal = document.getElementById('cookie-modal');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const cookieList = document.getElementById('cookie-list');
+            const clearCookiesBtn = document.getElementById('clear-cookies-btn');
+            
+            // 协议同意逻辑
+            agreeCheckbox.addEventListener('change', function() {
+                agreeBtn.disabled = !this.checked;
+                if (this.checked) {
+                    agreeBtn.classList.add('animate-bounce-gentle');
+                } else {
+                    agreeBtn.classList.remove('animate-bounce-gentle');
+                }
+            });
+            
+            agreeBtn.addEventListener('click', function() {
+                // 设置应用Cookie
+                const appCookies = CookieManager.setAppCookies();
+                
+                // 存储用户已同意的状态到localStorage（备用）
+                localStorage.setItem('licenseAgreed', 'true');
+                
+                // 显示Cookie设置成功提示
+                agreeBtn.textContent = '正在设置Cookie...';
+                agreeBtn.disabled = true;
+                
+                setTimeout(() => {
+                    // 添加淡出动画
+                    licenseCard.style.animation = 'fadeOut 0.5s ease-in-out';
+                    setTimeout(() => {
+                        licenseCard.classList.add('hidden');
+                        detectionCard.classList.remove('hidden');
+                        updateCookieInfo();
+                        initDetection();
+                    }, 500);
+                }, 1000);
+            });
+            
+            // 检查用户是否已经同意过协议
+            if (CookieManager.getCookie('license_agreed') === 'true' || localStorage.getItem('licenseAgreed') === 'true') {
+                licenseCard.classList.add('hidden');
+                detectionCard.classList.remove('hidden');
+                updateCookieInfo();
+                initDetection();
+            }
+            
+            // 更新Cookie信息显示
+            function updateCookieInfo() {
+                const cookies = CookieManager.getAllCookies();
+                const count = Object.keys(cookies).length;
+                cookieCount.textContent = count;
+            }
+            
+            // 显示Cookie详情
+            function showCookieDetails() {
+                const cookies = CookieManager.getAllCookies();
+                const appCookieDescriptions = {
+                    'license_agreed': '许可协议同意状态',
+                    'consent_timestamp': '同意时间戳',
+                    'session_id': '会话ID',
+                    'user_id': '用户标识',
+                    'app_version': '应用版本',
+                    'theme_preference': '主题偏好',
+                    'language': '语言设置',
+                    'analytics_enabled': '分析统计开关'
+                };
+                
+                cookieList.innerHTML = '';
+                
+                if (Object.keys(cookies).length === 0) {
+                    cookieList.innerHTML = '<p class="text-gray-400 text-center">暂无Cookie</p>';
+                    return;
+                }
+                
+                Object.entries(cookies).forEach(([name, value]) => {
+                    const description = appCookieDescriptions[name] || '第三方Cookie';
+                    const isAppCookie = appCookieDescriptions.hasOwnProperty(name);
+                    
+                    const cookieElement = document.createElement('div');
+                    cookieElement.className = `p-3 rounded-lg border ${isAppCookie ? 'bg-accent-orange/10 border-accent-orange/20' : 'bg-gray-700/30 border-gray-600'}`;
+                    cookieElement.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex-1">
+                                <div class="font-medium text-accent-orange">${name}</div>
+                                <div class="text-sm text-gray-400">${description}</div>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded ${isAppCookie ? 'bg-success-green text-white' : 'bg-gray-600 text-gray-300'}">
+                                ${isAppCookie ? '应用' : '第三方'}
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-300 break-all">
+                            值: ${value.length > 50 ? value.substring(0, 50) + '...' : value}
+                        </div>
+                    `;
+                    cookieList.appendChild(cookieElement);
+                });
+            }
+            
+            // Cookie相关事件监听
+            showCookiesBtn.addEventListener('click', function() {
+                showCookieDetails();
+                cookieModal.classList.remove('hidden');
+                cookieModal.classList.add('flex');
+            });
+            
+            closeModalBtn.addEventListener('click', function() {
+                cookieModal.classList.add('hidden');
+                cookieModal.classList.remove('flex');
+            });
+            
+            // 点击模态框背景关闭
+            cookieModal.addEventListener('click', function(e) {
+                if (e.target === cookieModal) {
+                    cookieModal.classList.add('hidden');
+                    cookieModal.classList.remove('flex');
+                }
+            });
+            
+            clearCookiesBtn.addEventListener('click', function() {
+                if (confirm('确定要清除所有Cookie吗？这将需要重新同意协议。')) {
+                    CookieManager.clearAllCookies();
+                    localStorage.removeItem('licenseAgreed');
+                    location.reload();
+                }
+            });
+            
+            // 定期更新Cookie信息
+            setInterval(updateCookieInfo, 5000);
+            
+            // 初始化检测逻辑（保持原有功能）
+            function initDetection() {
+                const cnServer = document.getElementById('cn-server');
+                const usServer = document.getElementById('us-server');
+                const cnIp = document.getElementById('cn-ip');
+                const usIp = document.getElementById('us-ip');
+                const cnPing = document.getElementById('cn-ping');
+                const usPing = document.getElementById('us-ping');
+                const connectBtn = document.getElementById('connect-btn');
+                const retryBtn = document.getElementById('retry-btn');
+                const statusText = document.getElementById('status-text');
+                const statusMessage = document.getElementById('status-message');
+                const offlineMessage = document.getElementById('offline-message');
+                
+                // 服务器配置
+                const SERVERS = {
+                    cn: {
+                        display: 'cn.tangbot.xyz:3000',
+                        actual: '110.42.70.166:3000',
+                        name: '中国服务器'
+                    },
+                    us: {
+                        display: 'us.tangbot.xyz:3000',
+                        actual: 'us.tangbot.xyz:3000',
+                        name: '美国服务器'
+                    }
+                };
+                
+                let bestServer = null;
+                let isOnline = true;
+                
+                // 添加选中状态的样式类
+                function selectServer(serverElement) {
+                    cnServer.classList.remove('border-success-green', 'bg-success-green/20');
+                    usServer.classList.remove('border-success-green', 'bg-success-green/20');
+                    serverElement.classList.add('border-success-green', 'bg-success-green/20');
+                    serverElement.style.animation = 'bounceGentle 0.8s ease-in-out';
+                }
+                
+                // 检查网络状态
+                function checkNetworkStatus() {
+                    isOnline = navigator.onLine;
+                    if (!isOnline) {
+                        showOfflineStatus();
+                    }
+                    return isOnline;
+                }
+                
+                // 显示离线状态
+                function showOfflineStatus() {
+                    offlineMessage.classList.remove('hidden');
+                    statusMessage.textContent = '无法连接到互联网';
+                    statusText.textContent = '请检查网络连接后重试';
+                    connectBtn.classList.add('hidden');
+                    retryBtn.classList.remove('hidden');
+                    cnPing.innerHTML = '<span class="text-error-red">离线</span>';
+                    usPing.innerHTML = '<span class="text-error-red">离线</span>';
+                }
+                
+                // 测量服务器延迟
+                async function measureServerLatency(server) {
+                    const startTime = performance.now();
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 3000);
+                        
+                        const testUrl = `http://${server.actual}/miya/miya.html?ping_test=${Date.now()}`;
+                        const response = await fetch(testUrl, {
+                            method: 'HEAD',
+                            mode: 'no-cors',
+                            signal: controller.signal
+                        });
+                        
+                        clearTimeout(timeoutId);
+                        const latency = Math.round(performance.now() - startTime);
+                        return latency;
+                    } catch (error) {
+                        console.error(`测量 ${server.name} 延迟失败:`, error);
+                        return Infinity;
+                    }
+                }
+                
+                // 更新服务器状态显示
+                function updateServerDisplay(serverKey, latency) {
+                    const serverElement = serverKey === 'cn' ? cnPing : usPing;
+                    const serverItem = serverKey === 'cn' ? cnServer : usServer;
+                    
+                    if (latency === Infinity) {
+                        serverElement.innerHTML = '<span class="text-error-red">超时</span>';
+                        return;
+                    }
+                    
+                    serverElement.style.animation = 'fadeIn 0.5s ease-in-out';
+                    
+                    if (latency < 200) {
+                        serverElement.innerHTML = `<span class="text-success-green">${latency}ms</span>`;
+                    } else if (latency < 500) {
+                        serverElement.innerHTML = `<span class="text-accent-orange">${latency}ms</span>`;
+                    } else {
+                        serverElement.innerHTML = `<span class="text-error-red">${latency}ms</span>`;
+                    }
+                }
+                
+                // 检测所有服务器
+                async function detectAllServers() {
+                    if (!checkNetworkStatus()) return;
+                    
+                    // 记录服务器检测活动到Cookie
+                    CookieManager.setCookie('last_server_check', new Date().toISOString(), 1);
+                    
+                    offlineMessage.classList.add('hidden');
+                    connectBtn.disabled = true;
+                    retryBtn.classList.add('hidden');
+                    connectBtn.classList.remove('hidden');
+                    statusMessage.textContent = '正在测试服务器连接质量，请稍候...';
+                    statusText.textContent = '正在检测最优服务器...';
+                    
+                    cnPing.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-accent-orange/30 border-t-accent-orange rounded-full animate-spin"></span>';
+                    usPing.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-accent-orange/30 border-t-accent-orange rounded-full animate-spin"></span>';
+                    cnServer.classList.remove('border-success-green', 'bg-success-green/20');
+                    usServer.classList.remove('border-success-green', 'bg-success-green/20');
+                    bestServer = null;
+                    
+                    try {
+                        const [cnLatency, usLatency] = await Promise.all([
+                            measureServerLatency(SERVERS.cn),
+                            measureServerLatency(SERVERS.us)
+                        ]);
+                        
+                        updateServerDisplay('cn', cnLatency);
+                        updateServerDisplay('us', usLatency);
+                        
+                        if (cnLatency < usLatency) {
+                            bestServer = SERVERS.cn;
+                            statusText.textContent = `${SERVERS.cn.name}延迟更低，推荐连接`;
+                            selectServer(cnServer);
+                            CookieManager.setCookie('preferred_server', 'cn', 7);
+                        } else if (usLatency < cnLatency) {
+                            bestServer = SERVERS.us;
+                            statusText.textContent = `${SERVERS.us.name}延迟更低，推荐连接`;
+                            selectServer(usServer);
+                            CookieManager.setCookie('preferred_server', 'us', 7);
+                        } else {
+                            bestServer = SERVERS.cn;
+                            statusText.textContent = '已选择默认服务器';
+                            selectServer(cnServer);
+                            CookieManager.setCookie('preferred_server', 'cn', 7);
+                        }
+                        
+                        connectBtn.disabled = false;
+                        connectBtn.classList.add('animate-bounce-gentle');
+                        
+                    } catch (error) {
+                        console.error('检测服务器时出错:', error);
+                        statusText.textContent = '服务器检测失败，请重试';
+                        retryBtn.classList.remove('hidden');
+                        connectBtn.classList.add('hidden');
+                    }
+                }
+                
+                // 服务器选择点击事件
+                cnServer.addEventListener('click', function() {
+                    if (bestServer) {
+                        bestServer = SERVERS.cn;
+                        selectServer(cnServer);
+                        statusText.textContent = `已选择 ${SERVERS.cn.name}`;
+                        CookieManager.setCookie('selected_server', 'cn', 7);
+                    }
+                });
+                
+                usServer.addEventListener('click', function() {
+                    if (bestServer) {
+                        bestServer = SERVERS.us;
+                        selectServer(usServer);
+                        statusText.textContent = `已选择 ${SERVERS.us.name}`;
+                        CookieManager.setCookie('selected_server', 'us', 7);
+                    }
+                });
+                
+                // 连接按钮点击事件
+                connectBtn.addEventListener('click', function() {
+                    if (bestServer) {
+                        statusText.textContent = `正在连接到 ${bestServer.name}...`;
+                        CookieManager.setCookie('connection_attempt', new Date().toISOString(), 1);
+                        
+                        const targetUrl = bestServer === SERVERS.cn ? 
+                            `http://${bestServer.actual}/miya/miya.html` : 
+                            `http://${bestServer.actual}/miya/miya.html`;
+                        window.location.href = targetUrl;
+                    }
+                });
+                
+                // 重试按钮点击事件
+                retryBtn.addEventListener('click', detectAllServers);
+                
+                // 监听网络状态变化
+                window.addEventListener('online', () => {
+                    statusText.textContent = '网络已恢复，重新检测中...';
+                    detectAllServers();
+                });
+                
+                window.addEventListener('offline', showOfflineStatus);
+                
+                // 开始检测
+                detectAllServers();
+            }
+        });
+        
+        // 添加CSS动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeOut {
+                0% { opacity: 1; transform: translateY(0); }
+                100% { opacity: 0; transform: translateY(-10px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
 </html>
